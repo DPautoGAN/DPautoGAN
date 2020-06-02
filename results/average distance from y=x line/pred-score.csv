@@ -1,0 +1,13 @@
+"Algorithm are listed first, then the average of categorical, continuous, then the label salary feature. For DP-SYN, we also split out 4 features that output only one class. Weights indicate number of features in that type, e.g. how many categorical features are being averaged. Average_all is when we take all average. However, since this average both R^2 and F_1 scores, it can be in appropriate, so only average of F_1 score is also calculated.  -1 indicates that the category does not exist, so the average is invalid.",,,,,,,,,,,,,,
+DPautoGAN_0_36,average:,0.295306614,0.351419621,0.461882701,weight:,8,4,1,average_all:,0.3253857,,,average_categorical:,0.313815068
+DPautoGAN_0_51,average:,0.164220979,1.006016013,0.405592946,weight:,8,4,1,average_all:,0.44180191,,,average_categorical:,0.191040086
+DPautoGAN_1_01,average:,0.1746882,0.304450535,0.355415402,weight:,8,4,1,average_all:,0.228517165,,,average_categorical:,0.194769
+DP_VAE_0.36_noise_5,average:,0.353700365,1.1656295,0.595805313,weight:,8,4,1,average_all:,0.622148172,,,average_categorical:,0.380600914
+DP_VAE_0.51_noise_4,average:,0.21135729,1.610624227,0.547514702,weight:,8,4,1,average_all:,0.667759226,,,average_categorical:,0.248708114
+DP_VAE_1.01_noise_2,average:,0.179428924,0.589873555,0.498873669,weight:,8,4,1,average_all:,0.330292253,,,average_categorical:,0.214922785
+DP_WGAN_0_35_noise_27.5,average:,0.391690922,-1,0.477556269,weight:,7,0,1,average_all:,0.40242409,,,average_categorical:,0.40242409
+DP_WGAN_0_5_noise_19,average:,0.215478697,-1,0.259742001,weight:,7,0,1,average_all:,0.22101161,,,average_categorical:,0.22101161
+DP_WGAN_1_0_noise_9,average:,0.155638153,-1,0.334844168,weight:,7,0,1,average_all:,0.178038905,,,average_categorical:,0.178038905
+DP_SYN_0.5_4_1,average:,0.121926243,0.055524888,0.060788175,0,weight:,6,2,1,4,average_all:,0.069491955,average_categorical:,0.072031421
+DP_SYN_0.8_4_1,average:,0.107925715,0.015576449,0.062986458,0,weight:,6,2,1,4,average_all:,0.057053357,average_categorical:,0.064594613
+DP_SYN_1.4_4_1,average:,0.094259431,0.029882913,0.070694443,0,weight:,6,2,1,4,average_all:,0.053539758,average_categorical:,0.057841003
