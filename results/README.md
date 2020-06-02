@@ -9,7 +9,7 @@ In each algorithm, we tried a range of noise multiplier and pick the best one. D
 
 Noise multipliers tried: 7,9,11,13,15. For eps = 0.35,0.51, also tried 19,23,27.5,35, and for eps=0.35, also tried 40,45,50.
 
-Epsilon | Noise used
+Epsilon | Best noise multiplier
 --- | --- 
 0.35 | 27.5
 0.51 | 19
@@ -21,7 +21,7 @@ Epsilon | Noise used
 
 Noise multipliers tried: 1,1.5,...,5 and upto 6.5 for eps=0.51 and to 8.5 for eps=0.36.
 
-Epsilon | Noise used
+Epsilon | Best noise multiplier
 --- | --- 
 0.35 | 5
 0.51 | 4
@@ -33,7 +33,7 @@ Epsilon | Noise used
 
 Noise multipliers tried: 2,4,6,8.
 
-Epsilon | Noise used
+Epsilon | Best noise multiplier
 --- | --- 
 0.5 | 4
 0.8 | 4
