@@ -2,6 +2,26 @@
 
 Code for the paper Differentially Private Mixed-Type Data Generation for Unsupervised Learning.
 
+### Dependency
+
+certifi==2020.4.5.1
+cycler==0.10.0
+future==0.18.2
+joblib==0.15.1
+kiwisolver==1.2.0
+matplotlib==3.2.1
+numpy==1.18.4
+pandas==1.0.4
+pyparsing==2.4.7
+python-dateutil==2.8.1
+pytz==2020.1
+scikit-learn==0.23.1
+scipy==1.4.1
+six==1.15.0
+sklearn==0.0
+threadpoolctl==2.1.0
+torch==1.5.0
+
 ### UCI Data Generation
 
 To run the DPautoGAN on UCI Dataset, follow the uci.ipynb jupyter notebook. Cell 2 requires the correct names of the dataset files to be passed in. If you have exactly cloned the repository and have not made any changes then this should not be an issue.
