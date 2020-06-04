@@ -11,7 +11,7 @@ Noise multipliers tried: 7,9,11,13,15. For eps = 0.35,0.51, also tried 19,23,27.
 
 Epsilon | Best noise multiplier
 --- | --- 
-0.35 | 27.5
+0.36 | 27.5
 0.51 | 19
 0.8 | 11
 1.01 | 9
@@ -23,7 +23,7 @@ Noise multipliers tried: 1,1.5,...,5 and upto 6.5 for eps=0.51 and to 8.5 for ep
 
 Epsilon | Best noise multiplier
 --- | --- 
-0.35 | 5
+0.36 | 5
 0.51 | 4
 0.8 | 2.5
 1.01 | 2
