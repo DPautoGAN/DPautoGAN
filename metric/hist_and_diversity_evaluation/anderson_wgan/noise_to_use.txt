@@ -1,0 +1,10 @@
+wgan_all = [pd.read_csv('anderson_wgan/noise_19_0_5.csv'),
+            pd.read_csv('anderson_wgan/noise_11_0_8.csv'),
+            pd.read_csv('anderson_wgan/noise_7_1_4.csv') ]
+
+wgan_all2 = [pd.read_csv('anderson_wgan/noise_27.5_0_35.csv'),
+            pd.read_csv('anderson_wgan/noise_19_0_5.csv'),
+            pd.read_csv('anderson_wgan/noise_9_1_0.csv') ]
+
+How to pick: go to accuracy score. Scanned out those with target synthetic score of 0. 
+Then pick ones with highest total prediction score.

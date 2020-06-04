@@ -1,0 +1,6 @@
+noise = 2 for eps=0.5 didn't work even with order = 96. Epsilon is just too small.
+
+eps=0.5: noise = 6 gives the best accuracy; the second best is noise=8.
+eps=0.8: noise = 4 gives the best accuracy
+eps=1.4: noise = 4 gives the best accuracy
+I use moment order 32 as usual for eps=0.8,1.4; but 96 for eps-0.5, for otherwise it does not work
