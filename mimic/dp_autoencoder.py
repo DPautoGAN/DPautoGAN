@@ -8,8 +8,6 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-import census_dataset
-import credit_dataset
 import mimic_dataset
 
 import dp_optimizer
@@ -53,8 +51,6 @@ class Autoencoder(nn.Module):
 def train(params):
     dataset = {
         'mimic': mimic_dataset,
-        'credit': credit_dataset,
-        'census': census_dataset,
     }[params['dataset']]
 
     _, train_dataset, validation_dataset, _ = dataset.get_datasets()
@@ -67,20 +63,13 @@ def train(params):
         device=params['device'],
     )
 
-    decoder_optimizer = dp_optimizer.DPAdam(
+    autoencoder_optimizer = dp_optimizer.DPAdam(
         l2_norm_clip=params['l2_norm_clip'],
         noise_multiplier=params['noise_multiplier'],
         minibatch_size=params['minibatch_size'],
         microbatch_size=params['microbatch_size'],
         params=autoencoder.get_decoder().parameters(),
         lr=params['lr'],
-        betas=(params['b1'], params['b2']),
-        weight_decay=params['l2_penalty'],
-    )
-
-    encoder_optimizer = torch.optim.Adam(
-        params=autoencoder.get_encoder().parameters(),
-        lr=params['lr'] * params['microbatch_size'] / params['minibatch_size'],
         betas=(params['b1'], params['b2']),
         weight_decay=params['l2_penalty'],
     )
@@ -107,17 +96,15 @@ def train(params):
     iteration = 0
     train_losses, validation_losses = [], []
     for X_minibatch in minibatch_loader(train_dataset):
-        encoder_optimizer.zero_grad()
-        decoder_optimizer.zero_grad()
+        autoencoder_optimizer.zero_grad()
         for X_microbatch in microbatch_loader(X_minibatch):
             X_microbatch = X_microbatch.to(params['device'])
-            decoder_optimizer.zero_microbatch_grad()
+            autoencoder_optimizer.zero_microbatch_grad()
             output = autoencoder(X_microbatch)
             loss = autoencoder_loss(output, X_microbatch)
             loss.backward()
-            decoder_optimizer.microbatch_step()
-        encoder_optimizer.step()
-        decoder_optimizer.step()
+            autoencoder_optimizer.microbatch_step()
+        autoencoder_optimizer.step()
 
         validation_loss = autoencoder_loss(autoencoder(x_validation).detach(), x_validation)
         train_losses.append(loss.item())

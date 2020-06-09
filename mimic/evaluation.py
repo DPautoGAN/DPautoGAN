@@ -11,13 +11,12 @@ import numpy as np
 import pandas as pd
 import torch
 from torch import nn, optim
+import sys
+import os
+import analysis
 
-import census_dataset
-import credit_dataset
 import mimic_dataset
 
-from dp_autoencoder import Autoencoder
-from dp_wgan import Generator
 
 
 # Deterministic output
@@ -122,7 +121,6 @@ def feature_prediction_evaluation(
         plt.ylabel('Generated Data')
         plt.axis((0., 1., 0., 1.))
         plt.plot((0, 1), (0, 1))
-        plt.savefig('dw-pred.png')
         pd.DataFrame(data={'real': real_classifier_scores, 'synthetic': synthetic_classifier_scores}).to_csv('dw-pred.csv')
 
     return sum(map(lambda pair: (pair[0] - pair[1]) ** 2, zip(real_classifier_scores, synthetic_classifier_scores)))
@@ -148,7 +146,6 @@ def feature_probabilities_evaluation(real, synthetic, plot=False):
         plt.ylabel('Generated Data')
         plt.axis((-0.1, 1.1, -0.1, 1.1))
         plt.plot((0, 1), (0, 1))
-        plt.savefig('dw-prob.png')
         props.to_csv('dw-prob.csv')
 
     return sum(map(lambda pair: (pair[0] - pair[1]) ** 2, zip(props['real'], props['synthetic'])))
@@ -169,30 +166,62 @@ def pca_evaluation(real, synthetic):
 if __name__ == '__main__':
     # Load real dataset
     _, train_dataset, validation_dataset, _ = mimic_dataset.get_datasets()
+    private = True
+    dw_prob = False
+    path = 'dpwgans1/'
 
-    num_examples = len(validation_dataset)
-    latent_dim = 128
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    for model_file in list(os.listdir(path)):
+        if os.path.isdir(path + model_file) or model_file[-4:] != '.dat':# or os.path.isdir(path + model_file[:4]):
+            continue
 
-    # Generate synthetic dataset
-    generator = torch.load('dp_generator.dat')
-    decoder = torch.load('dp_autoencoder.dat').get_decoder()
-    random_noise = torch.randn(num_examples, latent_dim).to(device)
-    decoded_samples = decoder(generator(random_noise))
-    synthetic_data = decoded_samples.detach().cpu().numpy()
-    synthetic_data = train_dataset.postprocess(decoded_samples).numpy().astype('int32')
+        model_dir = path + model_file[:-4] + '/'
+        try:
+            os.mkdir(model_dir)
+        except: pass
 
-    train = pd.DataFrame(train_dataset.data.numpy().astype('int32'))
-    test = pd.DataFrame(validation_dataset.data.numpy().astype('int32'))
-    synthetic = pd.DataFrame(synthetic_data)
+        iterations = int(model_file[:-4])
 
-    #print('Score achieved: {}'.format(feature_prediction_evaluation(real, synthetic, lambda: MLPRegressor((128, 64)), plot=True)))
-    #print('Score achieved: {}'.format(feature_prediction_evaluation(real, synthetic, lambda: RandomForestRegressor(n_estimators=10), plot=True)))
-    #print('Score achieved: {}'.format(feature_prediction_evaluation(train, test, synthetic, plot=True)))
-    #print('Score achieved: {}'.format(pca_evaluation(real, synthetic)))
+        if private:
+            minibatch_size = 128
+            noise_multiplier = 1.1
+            delta = 1.2871523321606923e-5
 
-    #print('Score achieved: {}'.format(feature_probabilities_evaluation(test, synthetic, plot=True)))
-    print('Score achieved: {}'.format(feature_prediction_evaluation(train, test, synthetic, Model=lambda: LogisticRegression(solver='liblinear', max_iter=100), score=roc_auc_score, plot=True)))
-    #print('Score achieved: {}'.format(feature_prediction_evaluation(train, test, synthetic, lambda: RandomForestClassifier(n_estimators=50), score=roc_auc_score, plot=True)))
+            from dp_autoencoder import Autoencoder
+            from dp_wgan import Generator
+            latent_dim = 64
+            generator = torch.load(path + model_file)
+            decoder = torch.load('dp_autoencoder.dat').get_decoder()
 
+            epsilon = analysis.epsilon(len(train_dataset), minibatch_size, noise_multiplier, iterations, delta)
+             
+            body = 'N: {}\nb: {}\nSigma: {}\nT: {}\nEps: {}\nDelta: {}'.format(len(train_dataset), minibatch_size, noise_multiplier, iterations, epsilon, delta)
 
+            with open(model_dir + 'eps.txt', 'w') as f:
+                f.write(body)
+
+        else:
+            from autoencoder import Autoencoder
+            from wgan import Generator
+            latent_dim = 128
+            generator = torch.load(path + model_file)
+            decoder = torch.load('autoencoder.dat').get_decoder()
+
+        num_examples = len(validation_dataset)
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+        # Generate synthetic dataset
+        random_noise = torch.randn(num_examples, latent_dim).to(device)
+        decoded_samples = decoder(generator(random_noise))
+        synthetic_data = decoded_samples.detach().cpu().numpy()
+        synthetic_data = train_dataset.postprocess(decoded_samples).numpy().astype('int32')
+
+        train = pd.DataFrame(train_dataset.data.numpy().astype('int32'))
+        test = pd.DataFrame(validation_dataset.data.numpy().astype('int32'))
+        synthetic = pd.DataFrame(synthetic_data)
+
+        print('Score achieved: {}'.format(feature_probabilities_evaluation(test, synthetic, plot=True)))
+        plt.savefig(model_dir + 'dw_prob.png')
+        plt.close('all')
+        print('Score achieved: {}'.format(feature_prediction_evaluation(train, test, synthetic, Model=lambda: LogisticRegression(solver='liblinear', max_iter=100), score=roc_auc_score, plot=True)))
+        plt.savefig(model_dir + 'dw_pred.png')
+        plt.close('all')

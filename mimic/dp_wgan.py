@@ -6,8 +6,6 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 
 from dp_autoencoder import Autoencoder
-import census_dataset
-import credit_dataset
 import mimic_dataset
 
 import dp_optimizer
@@ -19,34 +17,36 @@ import analysis
 torch.manual_seed(0)
 np.random.seed(0)
 
-
 class Generator(nn.Module):
-    def __init__(self, input_dim, output_dim, binary, device='cpu'):
+    def __init__(self, input_dim, output_dim, binary=True, device='cpu'):
         super(Generator, self).__init__()
-
-        def block(input_dim, output_dim, Activation, device):
+        def block(inp, out, Activation, device):
             return nn.Sequential(
-                nn.Linear(input_dim, output_dim, bias=False),
+                nn.Linear(inp, out, bias=False),
+                nn.LayerNorm(out),
                 Activation(),
             ).to(device)
 
-        self.block_0 = block(input_dim, 128, nn.ReLU, device)
-        self.block_1 = block(128, output_dim, (nn.Tanh if binary else nn.ReLU), device)
+        self.block_0 = block(input_dim, input_dim, nn.Tanh if binary else lambda: nn.LeakyReLU(0.2), device)
+        self.block_1 = block(input_dim, input_dim, nn.Tanh if binary else lambda: nn.LeakyReLU(0.2), device)
+        self.block_2 = block(input_dim, output_dim, nn.Tanh if binary else lambda: nn.LeakyReLU(0.2), device)
 
     def forward(self, x):
         x = self.block_0(x) + x
         x = self.block_1(x) + x
+        x = self.block_2(x)
         return x
-
 
 
 class Discriminator(nn.Module):
     def __init__(self, input_dim, device='cpu'):
         super(Discriminator, self).__init__()
         self.model = nn.Sequential(
-            nn.Linear(input_dim, 256),
-            nn.ReLU(),
-            nn.Linear(256, 1),
+            nn.Linear(input_dim, (2 * input_dim) // 3),
+            nn.LeakyReLU(0.2),
+            nn.Linear((2 * input_dim) // 3, input_dim // 3),
+            nn.LeakyReLU(0.2),
+            nn.Linear(input_dim // 3, 1),
         ).to(device)
 
     def forward(self, x):
@@ -56,8 +56,6 @@ class Discriminator(nn.Module):
 def train(params):
     dataset = {
         'mimic': mimic_dataset,
-        'credit': credit_dataset,
-        'census': census_dataset,
     }[params['dataset']]
 
     _, train_dataset, _, _ = dataset.get_datasets()
@@ -144,6 +142,10 @@ def train(params):
             print('[Iteration %d/%d] [D loss: %f] [G loss: %f]' % (iteration, params['iterations'], d_loss.item(), g_loss.item()))
         iteration += 1
 
+        if iteration % 1000 == 0:
+            with open('dpwgans1/{}.dat'.format(iteration), 'wb') as f:
+                torch.save(generator, f)
+
     return generator
 
 
@@ -152,18 +154,18 @@ if __name__ == '__main__':
     parser.add_argument('--alpha', type=float, default=0.99, help='smoothing parameter for RMS prop (default: 0.99)')
     parser.add_argument('--binary', type=bool, default=True, help='whether data type is binary (default: true)')
     parser.add_argument('--clip-value', type=float, default=0.01, help='upper bound on weights of the discriminator (default: 0.01)')
-    parser.add_argument('--d-updates', type=int, default=2, help='number of iterations to update discriminator per generator update (default: 2)')
+    parser.add_argument('--d-updates', type=int, default=10, help='number of iterations to update discriminator per generator update (default: 2)')
     parser.add_argument('--dataset', type=str, default='mimic', help='the dataset to be used for training (default: mimic)')
-    parser.add_argument('--delta', type=float, default=1.2871523321606923e-5, help='delta for epsilon calculation (default: ~1e-5)')
+    parser.add_argument('--delta', type=float, default=1e-5, help='delta for epsilon calculation (default: ~1e-5)')
     parser.add_argument('--device', type=str, default=('cuda' if torch.cuda.is_available() else 'cpu'), help='whether or not to use cuda (default: cuda if available)')
-    parser.add_argument('--iterations', type=int, default=30000, help='number of iterations to train (default: 30000)')
-    parser.add_argument('--l2-norm-clip', type=float, default=0.35, help='upper bound on the l2 norm of gradient updates (default: 0.35)')
-    parser.add_argument('--l2-penalty', type=float, default=0.001, help='l2 penalty on model weights (default: 0.001)')
-    parser.add_argument('--latent-dim', type=int, default=128, help='dimensionality of the latent space (default: 128)')
-    parser.add_argument('--lr', type=float, default=0.001, help='learning rate (default: 1e-3)')
+    parser.add_argument('--iterations', type=int, default=10000, help='number of iterations to train (default: 30000)')
+    parser.add_argument('--l2-norm-clip', type=float, default=0.022, help='upper bound on the l2 norm of gradient updates (default: 0.35)')
+    parser.add_argument('--l2-penalty', type=float, default=0., help='l2 penalty on model weights (default: 0.001)')
+    parser.add_argument('--latent-dim', type=int, default=64, help='dimensionality of the latent space (default: 128)')
+    parser.add_argument('--lr', type=float, default=0.005, help='learning rate (default: 1e-3)')
     parser.add_argument('--microbatch-size', type=int, default=1, help='input microbatch size for training (default: 10)')
-    parser.add_argument('--minibatch-size', type=int, default=1000, help='input minibatch size for training (default: 1000)')
-    parser.add_argument('--noise-multiplier', type=float, default=1.1, help='ratio between clipping bound and std of noise applied to gradients (default: 1.1)')
+    parser.add_argument('--minibatch-size', type=int, default=128, help='input minibatch size for training (default: 1000)')
+    parser.add_argument('--noise-multiplier', type=float, default=3.5, help='ratio between clipping bound and std of noise applied to gradients (default: 3.5)')
     params = vars(parser.parse_args())
 
     generator = train(params)

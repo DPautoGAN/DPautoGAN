@@ -7,8 +7,6 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-import census_dataset
-import credit_dataset
 import mimic_dataset
 
 
@@ -48,8 +46,6 @@ class Autoencoder(nn.Module):
 def train(params):
     dataset = {
         'mimic': mimic_dataset,
-        'credit': credit_dataset,
-        'census': census_dataset,
     }[params['dataset']]
 
     train_dataset, _, validation_dataset, _ = dataset.get_datasets()

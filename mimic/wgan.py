@@ -6,8 +6,6 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 
 from autoencoder import Autoencoder
-import census_dataset
-import credit_dataset
 import mimic_dataset
 
 
@@ -57,8 +55,6 @@ class Discriminator(nn.Module):
 def train(params):
     dataset = {
         'mimic': mimic_dataset,
-        'credit': credit_dataset,
-        'census': census_dataset,
     }[params['dataset']]
 
     train_dataset, _, _, _ = dataset.get_datasets()
@@ -129,6 +125,10 @@ def train(params):
                 )
             batches_done += 1
 
+        if epoch % 20 == 0:
+            with open('wgans/{}.dat'.format(str(epoch)), 'wb') as f:
+                torch.save(generator, f)
+
     return generator
 
 
@@ -138,7 +138,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch-size', type=int, default=1000, help='input batch size for training (default: 1000)')
     parser.add_argument('--clip-value', type=float, default=0.01, help='upper bound on weights of the discriminator (default: 0.01)')
     parser.add_argument('--device', type=str, default=('cuda' if torch.cuda.is_available() else 'cpu'), help='whether or not to use cuda (default: cuda if available)')
-    parser.add_argument('--epochs', type=int, default=1000, help='number of epochs to train (default: 1000)')
+    parser.add_argument('--epochs', type=int, default=200, help='number of epochs to train (default: 1000)')
     parser.add_argument('--latent-dim', type=int, default=128, help='dimensionality of the latent space (default: 128)')
     parser.add_argument('--lr', type=float, default=0.001, help='learning rate (default: 1e-3)')
     parser.add_argument('--binary', type=bool, default=True, help='whether data type is binary (default: true)')
