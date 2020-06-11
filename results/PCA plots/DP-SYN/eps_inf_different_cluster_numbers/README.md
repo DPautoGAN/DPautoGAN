@@ -4,7 +4,5 @@ For eps=inf, we found that points are clustered in one flat band. We also tried 
 The two numbers in each text file (which are the same) are the number of clusters.
 
 We do not find any difference even trying very large number of clusters. 
-This suggests that the "collapse" of DP-SYN when no noise is injected on ADULT (our preprocessing) is due to the autoencoder overfitting to the majority in the dataset.
 
-
-Adding noise makes DP-EM seems to select more clusters at different locations, likely due to noisy autoencoder encoding data into a less concentrated way. 
+Adding noise makes DP-EM seems to select more clusters at different locations, maybe due to noisy autoencoder encoding data into a less concentrated way, or DP-EM scatters the center of clusters in a more noisy way. 
